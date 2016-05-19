@@ -403,18 +403,95 @@ bool twitCurl::search( const std::string& searchQuery, const std::string resultC
 }
 
 /*++
+* @method: twitCurl::upload
+*
+* @description: method to send files to twitter which can later be included 
+* in status updates
+* NOTE: Only supports single-chunked uploads from a local file at the moment.
+*       Support is being investigated for multi-chunked uploads and
+*       uploads from in-memory sources.
+*
+* @input: Name of the file to pass to cURL for upload.
+*
+* @output: true if POST is success, otherwise false. This does not check http
+*          response by twitter. Use getLastWebResponse() for that.
+*
+* @note: Only JSON format supported.
+*
+*--*/
+bool twitCurl::upload( const std::string& fileName )
+{
+    if( fileName.empty() || !isCurlInit() )
+    {
+        return false;
+    }
+
+    /* Build upload URL */
+    std::string postUrl = twitCurlDefaults::TWITCURL_PROTOCOLS[m_eProtocolType] +
+                          twitterDefaults::TWITCURL_UPLOAD_URL +
+                          twitCurlDefaults::TWITCURL_EXTENSIONFORMATS[m_eApiFormatType];
+
+    prepareStandardParams();
+    
+    /* Set OAuth header */
+    std::string oAuthHttpHeader;
+    struct curl_slist* pOAuthHeaderList = NULL;
+    /* NOTE: We pass "" as the data string because the upload OAuth
+     * uses only the other oauth_ params to generate the relevant values. */
+    m_oAuth.getOAuthHeader( eOAuthHttpPost, postUrl, "", oAuthHttpHeader );
+    if( oAuthHttpHeader.length() )
+    {
+        pOAuthHeaderList = curl_slist_append( pOAuthHeaderList, oAuthHttpHeader.c_str() );
+        if( pOAuthHeaderList )
+        {
+            curl_easy_setopt( m_curlHandle, CURLOPT_HTTPHEADER, pOAuthHeaderList );
+        }
+    }
+
+    struct curl_httppost* formPost = NULL;
+    struct curl_httppost* lastPtr  = NULL;
+
+    curl_formadd( &formPost, &lastPtr,
+                  CURLFORM_COPYNAME, "media",
+                  CURLFORM_FILE, fileName.c_str(),
+                  CURLFORM_END );
+
+    curl_easy_setopt( m_curlHandle, CURLOPT_POST, 1 );
+    curl_easy_setopt( m_curlHandle, CURLOPT_URL, postUrl.c_str() );
+ 
+    curl_easy_setopt( m_curlHandle, CURLOPT_HTTPPOST, formPost );
+
+    if( curl_easy_perform(m_curlHandle) == CURLE_OK ) 
+    {
+        if( pOAuthHeaderList )
+        { 
+            curl_slist_free_all(pOAuthHeaderList);
+        }
+        return true;
+    }
+
+    if( pOAuthHeaderList )
+    {
+        curl_slist_free_all( pOAuthHeaderList );
+    }
+
+    return false;
+}
+
+/*++
 * @method: twitCurl::statusUpdate
 *
 * @description: method to update new status message in twitter profile
 *
 * @input: newStatus - status message text
 *         inReplyToStatusId - optional status id to we're replying to
+*         mediaIds - optional 
 *
 * @output: true if POST is success, otherwise false. This does not check http
 *          response by twitter. Use getLastWebResponse() for that.
 *
 *--*/
-bool twitCurl::statusUpdate( const std::string& newStatus, const std::string inReplyToStatusId )
+bool twitCurl::statusUpdate( const std::string& newStatus, const std::string inReplyToStatusId, const std::string mediaIds )
 {
     if( newStatus.empty() )
     {
@@ -430,6 +507,13 @@ bool twitCurl::statusUpdate( const std::string& newStatus, const std::string inR
         newStatusMsg += twitCurlDefaults::TWITCURL_URL_SEP_AMP +
                         twitCurlDefaults::TWITCURL_INREPLYTOSTATUSID +
                         urlencode( inReplyToStatusId );
+    }
+
+    if ( mediaIds.size() )
+    {
+        newStatusMsg += twitCurlDefaults::TWITCURL_URL_SEP_AMP +
+                        twitCurlDefaults::TWITCURL_MEDIA_IDS +
+                        urlencode( mediaIds );
     }
 
     /* Perform POST */

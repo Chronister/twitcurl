@@ -37,6 +37,7 @@ namespace twitCurlDefaults
     const std::string TWITCURL_INCLUDE_ENTITIES = "include_entities=";
     const std::string TWITCURL_STRINGIFY_IDS = "stringify_ids=";
     const std::string TWITCURL_INREPLYTOSTATUSID = "in_reply_to_status_id=";
+    const std::string TWITCURL_MEDIA_IDS = "media_ids=";
 
     /* URL separators */
     const std::string TWITCURL_URL_SEP_AMP = "&";
@@ -51,6 +52,10 @@ namespace twitterDefaults
 
     /* Search URLs */
     const std::string TWITCURL_SEARCH_URL = TWITCURL_BASE_URL + "search/tweets";
+
+    /* Media URLs */
+    const std::string TWITCURL_MEDIA_BASE_URL = "upload.twitter.com/1.1/";
+    const std::string TWITCURL_UPLOAD_URL = TWITCURL_MEDIA_BASE_URL + "media/upload";
 
     /* Status URLs */
     const std::string TWITCURL_STATUSUPDATE_URL = TWITCURL_BASE_URL + "statuses/update";

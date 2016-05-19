@@ -4,4 +4,6 @@ x64_Release/
 .vs/
 *.sdf
 *.opendb
-
+*.dll
+*.exp
+*.res

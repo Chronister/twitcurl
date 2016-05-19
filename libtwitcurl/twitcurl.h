@@ -48,8 +48,11 @@ public:
     /* Twitter search APIs */
     bool search( const std::string& searchQuery /* in */, const std::string resultCount = "" /* in */ );
 
+    /* Twitter media APIs */
+    bool upload( const std::string& fileName /* in */);
+
     /* Twitter status APIs */
-    bool statusUpdate( const std::string& newStatus /* in */, const std::string inReplyToStatusId = "" /* in */ );
+    bool statusUpdate( const std::string& newStatus /* in */, const std::string inReplyToStatusId = "" /* in */, const std::string mediaIds = "" );
     bool statusShowById( const std::string& statusId /* in */ );
     bool statusDestroyById( const std::string& statusId /* in */ );
     bool retweetById( const std::string& statusId /* in */ );
